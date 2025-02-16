@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WiDaySunny, WiThermometer, WiHumidity, WiStrongWind } from 'react-icons/wi';
+import { WiThermometer, WiHumidity, WiStrongWind } from 'react-icons/wi';
 import { getWeatherData } from './services/weatherApi';
 
 function App() {
