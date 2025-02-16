@@ -59,3 +59,28 @@ export const getWeatherData = async (city) => {
     throw new Error(error.response?.data?.message || 'Failed to fetch weather data');
   }
 };
+
+export const getWeatherByCoords = async (lat, lon) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/weather`, {
+      params: {
+        lat,
+        lon,
+        appid: API_KEY,
+        units: 'metric'
+      }
+    });
+
+    const { data } = response;
+    return {
+      city: data.name,
+      temp: Math.round(data.main.temp),
+      humidity: data.main.humidity,
+      wind: Math.round(data.wind.speed),
+      description: data.weather[0].description,
+      icon: data.weather[0].icon
+    };
+  } catch (error) {
+    throw new Error('Failed to fetch weather data for your location');
+  }
+};
