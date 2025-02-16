@@ -2,6 +2,33 @@ import axios from 'axios';
 
 const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+
+export const getCitySuggestions = async (searchText) => {
+  if (!searchText.trim() || searchText.length < 2) return [];
+  
+  try {
+    const response = await axios.get(`${GEO_URL}/direct`, {
+      params: {
+        q: searchText,
+        limit: 5,
+        appid: API_KEY
+      }
+    });
+
+    return response.data.map(city => ({
+      name: city.name,
+      country: city.country,
+      state: city.state,
+      lat: city.lat,
+      lon: city.lon,
+      displayName: `${city.name}${city.state ? `, ${city.state}` : ''}, ${city.country}`
+    }));
+  } catch (error) {
+    console.error('Error fetching city suggestions:', error);
+    return [];
+  }
+};
 
 export const getWeatherData = async (city) => {
   try {

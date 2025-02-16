@@ -1,22 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { WiThermometer, WiHumidity, WiStrongWind } from 'react-icons/wi';
-import { getWeatherData } from './services/weatherApi';
+import { getWeatherData, getCitySuggestions } from './services/weatherApi';
 
 function App() {
   const [city, setCity] = useState('');
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!city.trim()) return;
+  useEffect(() => {
+    // Handle clicks outside suggestions box
+    const handleClickOutside = (event) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleInputChange = async (e) => {
+    const value = e.target.value;
+    setCity(value);
+    
+    if (value.length >= 2) {
+      const cityResults = await getCitySuggestions(value);
+      setSuggestions(cityResults);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setCity(suggestion.name);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    handleSearch(null, suggestion.name);
+  };
+
+  const handleSearch = async (e, selectedCity = null) => {
+    if (e) e.preventDefault();
+    const searchCity = selectedCity || city;
+    if (!searchCity.trim()) return;
 
     setLoading(true);
     setError('');
     
     try {
-      const data = await getWeatherData(city);
+      const data = await getWeatherData(searchCity);
       setWeather(data);
     } catch (err) {
       setError(err.message);
@@ -34,15 +71,34 @@ function App() {
         </h1>
         
         {/* Search Form */}
-        <form onSubmit={handleSearch} className="mb-8">
+        <form onSubmit={handleSearch} className="mb-8 relative">
           <div className="flex gap-2">
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="Enter city name..."
-              className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={city}
+                onChange={handleInputChange}
+                placeholder="Enter city name..."
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              {/* Suggestions Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div 
+                  ref={suggestionsRef}
+                  className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={`${suggestion.name}-${index}`}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion.displayName}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               type="submit"
               disabled={loading}
