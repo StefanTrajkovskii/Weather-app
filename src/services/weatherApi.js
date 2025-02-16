@@ -4,81 +4,182 @@ const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
-export const getCitySuggestions = async (searchText) => {
-  if (!searchText.trim() || searchText.length < 2) return [];
-  
+export const getCitySuggestions = async (query) => {
   try {
     const response = await axios.get(`${GEO_URL}/direct`, {
       params: {
-        q: searchText,
+        q: query,
         limit: 5,
         appid: API_KEY
       }
     });
-
+    
     return response.data.map(city => ({
       name: city.name,
-      country: city.country,
-      state: city.state,
-      lat: city.lat,
-      lon: city.lon,
       displayName: `${city.name}${city.state ? `, ${city.state}` : ''}, ${city.country}`
     }));
   } catch (error) {
-    console.error('Error fetching city suggestions:', error);
     return [];
   }
 };
 
 export const getWeatherData = async (city) => {
   try {
-    console.log('API Key:', API_KEY); // Debug log
-    console.log('Fetching weather for:', city); // Debug log
-    
-    const response = await axios.get(`${BASE_URL}/weather`, {
+    // First get coordinates for the city
+    const geoResponse = await axios.get(`${GEO_URL}/direct`, {
       params: {
         q: city,
-        appid: API_KEY,
-        units: 'metric' // This will return temperature in Celsius
+        limit: 1,
+        appid: API_KEY
       }
     });
+    const geoData = geoResponse.data;
 
-    console.log('API Response:', response.data); // Debug log
+    if (!geoData.length) {
+      throw new Error('City not found');
+    }
 
-    const { data } = response;
+    const { lat, lon } = geoData[0];
+    
+    // Get current weather
+    const weatherResponse = await axios.get(`${BASE_URL}/weather`, {
+      params: {
+        lat,
+        lon,
+        units: 'metric',
+        appid: API_KEY
+      }
+    });
+    const weatherData = weatherResponse.data;
+
+    // Get 5-day forecast
+    const forecastResponse = await axios.get(`${BASE_URL}/forecast`, {
+      params: {
+        lat,
+        lon,
+        units: 'metric',
+        appid: API_KEY
+      }
+    });
+    const forecastData = forecastResponse.data;
+
+    // Process forecast data to get daily values
+    const dailyForecasts = forecastData.list.reduce((acc, item) => {
+      const date = new Date(item.dt * 1000);
+      const dateString = date.toDateString();
+      
+      if (!acc[dateString]) {
+        acc[dateString] = {
+          date,
+          temp: {
+            min: item.main.temp_min,
+            max: item.main.temp_max
+          },
+          icon: item.weather[0].icon,
+          description: item.weather[0].description
+        };
+      } else {
+        // Update min/max temperatures
+        acc[dateString].temp.min = Math.min(acc[dateString].temp.min, item.main.temp_min);
+        acc[dateString].temp.max = Math.max(acc[dateString].temp.max, item.main.temp_max);
+      }
+      
+      return acc;
+    }, {});
+
+    // Convert to array and take first 7 days
+    const forecast = Object.values(dailyForecasts)
+      .slice(0, 7)
+      .map(day => ({
+        ...day,
+        temp: {
+          min: Math.round(day.temp.min),
+          max: Math.round(day.temp.max)
+        }
+      }));
+
     return {
-      city: data.name,
-      temp: Math.round(data.main.temp),
-      humidity: data.main.humidity,
-      wind: Math.round(data.wind.speed),
-      description: data.weather[0].main,
-      icon: data.weather[0].icon
+      city: geoData[0].name,
+      temp: Math.round(weatherData.main.temp),
+      humidity: weatherData.main.humidity,
+      wind: Math.round(weatherData.wind.speed),
+      description: weatherData.weather[0].description,
+      icon: weatherData.weather[0].icon,
+      forecast
     };
   } catch (error) {
-    console.error('API Error:', error.response?.data || error.message); // Debug log
-    throw new Error(error.response?.data?.message || 'Failed to fetch weather data');
+    console.error('API Error:', error.response?.data || error.message);
+    throw new Error('Failed to fetch weather data');
   }
 };
 
 export const getWeatherByCoords = async (lat, lon) => {
   try {
-    const response = await axios.get(`${BASE_URL}/weather`, {
+    // Get current weather
+    const weatherResponse = await axios.get(`${BASE_URL}/weather`, {
       params: {
         lat,
         lon,
-        appid: API_KEY,
-        units: 'metric'
+        units: 'metric',
+        appid: API_KEY
       }
     });
+    const weatherData = weatherResponse.data;
 
-    const { data } = response;
+    // Get 5-day forecast
+    const forecastResponse = await axios.get(`${BASE_URL}/forecast`, {
+      params: {
+        lat,
+        lon,
+        units: 'metric',
+        appid: API_KEY
+      }
+    });
+    const forecastData = forecastResponse.data;
+
+    // Process forecast data to get daily values
+    const dailyForecasts = forecastData.list.reduce((acc, item) => {
+      const date = new Date(item.dt * 1000);
+      const dateString = date.toDateString();
+      
+      if (!acc[dateString]) {
+        acc[dateString] = {
+          date,
+          temp: {
+            min: item.main.temp_min,
+            max: item.main.temp_max
+          },
+          icon: item.weather[0].icon,
+          description: item.weather[0].description
+        };
+      } else {
+        // Update min/max temperatures
+        acc[dateString].temp.min = Math.min(acc[dateString].temp.min, item.main.temp_min);
+        acc[dateString].temp.max = Math.max(acc[dateString].temp.max, item.main.temp_max);
+      }
+      
+      return acc;
+    }, {});
+
+    // Convert to array and take first 7 days
+    const forecast = Object.values(dailyForecasts)
+      .slice(0, 7)
+      .map(day => ({
+        ...day,
+        temp: {
+          min: Math.round(day.temp.min),
+          max: Math.round(day.temp.max)
+        }
+      }));
+
     return {
-      city: data.name,
-      temp: Math.round(data.main.temp),
-      humidity: data.main.humidity,
-      wind: Math.round(data.wind.speed),
-      description: data.weather[0].description,
-      icon: data.weather[0].icon
+      city: weatherData.name,
+      temp: Math.round(weatherData.main.temp),
+      humidity: weatherData.main.humidity,
+      wind: Math.round(weatherData.wind.speed),
+      description: weatherData.weather[0].description,
+      icon: weatherData.weather[0].icon,
+      forecast
     };
   } catch (error) {
     throw new Error('Failed to fetch weather data for your location');
