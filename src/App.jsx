@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import { WiDaySunny, WiDayCloudyGusts, WiWindBeaufort7 } from 'react-icons/wi';
 import Weather from './pages/Weather.jsx';
-import Cities from './pages/Cities.jsx';
+import Places from './pages/Places.jsx';
 import Map from './pages/Map.jsx';
 
 function App() {
@@ -26,7 +26,7 @@ function App() {
               <WiDaySunny className="text-2xl" />
             </NavLink>
             <NavLink
-              to="/cities"
+              to="/places"
               className={({ isActive }) =>
                 `p-3 rounded-lg transition-colors ${
                   isActive ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-gray-700'
@@ -52,7 +52,7 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Weather />} />
-            <Route path="/cities" element={<Cities />} />
+            <Route path="/places" element={<Places />} />
             <Route path="/map" element={<Map />} />
           </Routes>
         </main>

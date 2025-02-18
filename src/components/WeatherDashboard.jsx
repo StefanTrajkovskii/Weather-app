@@ -9,10 +9,11 @@ const WeatherDashboard = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favoriteCities');
+    const saved = localStorage.getItem('favoritePlaces');
     return saved ? JSON.parse(saved) : [];
   });
   const [currentTime, setCurrentTime] = useState('');
+  const [isCelsius, setIsCelsius] = useState(true);
   const suggestionsRef = useRef(null);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const WeatherDashboard = () => {
   }, [searchQuery]);
 
   useEffect(() => {
-    localStorage.setItem('favoriteCities', JSON.stringify(favorites));
+    localStorage.setItem('favoritePlaces', JSON.stringify(favorites));
   }, [favorites]);
 
   useEffect(() => {
@@ -115,6 +116,14 @@ const WeatherDashboard = () => {
     });
   };
 
+  const toggleUnit = () => {
+    setIsCelsius(!isCelsius);
+  };
+
+  const convertTemp = (temp) => {
+    return isCelsius ? temp : Math.round((temp * 9/5) + 32);
+  };
+
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -127,12 +136,18 @@ const WeatherDashboard = () => {
       {/* Search Bar */}
       <div className="relative mb-20 w-full max-w-md">
         <div className="flex gap-2">
+          <button
+            onClick={toggleUnit}
+            className="px-4 py-2 text-gray-400 bg-gray-800 rounded-lg border border-gray-700 transition-colors hover:text-white hover:border-gray-600"
+          >
+            °{isCelsius ? 'C' : 'F'}
+          </button>
           <div className="flex relative flex-1 items-center">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for a city..."
+              placeholder="Search for a place..."
               className="px-4 py-2 w-full text-white bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
             />
             <button
@@ -201,7 +216,7 @@ const WeatherDashboard = () => {
                 </div>
                 <p className="mb-4 text-gray-400">Chance of rain: {weather.chanceOfRain}%</p>
                 <div className="flex gap-4 justify-center items-center">
-                  <span className="text-7xl font-bold text-white">{weather.temp}°</span>
+                  <span className="text-7xl font-bold text-white">{convertTemp(weather.temp)}°</span>
                   <img
                     src={`http://openweathermap.org/img/wn/${weather.icon}@2x.png`}
                     alt={weather.description}
@@ -222,7 +237,7 @@ const WeatherDashboard = () => {
                         alt="weather icon"
                         className="mb-2 w-10 h-10"
                       />
-                      <span className="font-medium text-white">{hour.temp}°</span>
+                      <span className="font-medium text-white">{convertTemp(hour.temp)}°</span>
                     </div>
                   ))}
                 </div>
@@ -237,7 +252,7 @@ const WeatherDashboard = () => {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="flex flex-col">
                     <span className="mb-2 text-sm text-gray-400">Real Feel</span>
-                    <span className="text-lg font-medium text-white">{weather.realFeel}°</span>
+                    <span className="text-lg font-medium text-white">{convertTemp(weather.realFeel)}°</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="mb-2 text-sm text-gray-400">Wind</span>
@@ -283,8 +298,8 @@ const WeatherDashboard = () => {
                       <div className="flex flex-col items-end">
                         <p className="mb-1 text-sm text-gray-300 capitalize">{day.description}</p>
                         <div className="flex gap-2 justify-center">
-                          <span className="text-sm font-medium text-white">{day.temp.max}°</span>
-                          <span className="text-sm text-gray-400">{day.temp.min}°</span>
+                          <span className="text-sm font-medium text-white">{convertTemp(day.temp.max)}°</span>
+                          <span className="text-sm text-gray-400">{convertTemp(day.temp.min)}°</span>
                         </div>
                       </div>
                     </div>
