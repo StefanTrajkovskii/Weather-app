@@ -179,7 +179,7 @@ const WeatherDashboard = () => {
             <div className="space-y-6 lg:col-span-2">
               {/* City and Temperature */}
               <div className="text-center">
-                <div className="flex justify-center items-center gap-3 mb-2">
+                <div className="flex gap-3 justify-center items-center mb-2">
                   <h1 className="text-4xl font-bold text-white">{weather.city}</h1>
                   <button
                     onClick={() => toggleFavorite(weather.city)}
@@ -195,7 +195,7 @@ const WeatherDashboard = () => {
                     />
                   </button>
                 </div>
-                <div className="flex justify-center items-center gap-2 mb-4 text-gray-400">
+                <div className="flex gap-2 justify-center items-center mb-4 text-gray-400">
                   <FiClock size={16} />
                   <span>{currentTime}</span>
                 </div>
@@ -259,7 +259,7 @@ const WeatherDashboard = () => {
             <div className="lg:col-span-1">
               <div className="p-6 h-full bg-gray-800 rounded-lg">
                 <h2 className="mb-4 text-xl font-semibold text-white">7-Day Forecast</h2>
-                <div className="space-y-5">
+                <div className="space-y-7">
                   {weather.forecast?.map((day, index) => (
                     <div 
                       key={index} 
