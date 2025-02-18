@@ -80,6 +80,10 @@ function Places() {
     place.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handlePlaceClick = (place) => {
+    navigate(`/?search=${encodeURIComponent(place)}`);
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -114,7 +118,7 @@ function Places() {
             <div
               key={place}
               className="p-6 bg-gray-800 rounded-xl hover:bg-gray-700 transition-colors cursor-pointer"
-              onClick={() => navigate('/')}
+              onClick={() => handlePlaceClick(place)}
             >
               <div className="flex justify-between items-start mb-4">
                 <div>

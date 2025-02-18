@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiSearch, FiMapPin, FiHeart, FiClock } from 'react-icons/fi';
 import { getCitySuggestions, getWeatherData, getWeatherByCoords } from '../services/weatherApi';
+import { useLocation } from 'react-router-dom';
 
 const WeatherDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,6 +16,7 @@ const WeatherDashboard = () => {
   const [currentTime, setCurrentTime] = useState('');
   const [isCelsius, setIsCelsius] = useState(true);
   const suggestionsRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -29,7 +31,7 @@ const WeatherDashboard = () => {
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (searchQuery.length > 2) {
+      if (searchQuery.length > 2 && !location.search) {
         const results = await getCitySuggestions(searchQuery);
         setSuggestions(results);
       } else {
@@ -39,7 +41,7 @@ const WeatherDashboard = () => {
 
     const timeoutId = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, location.search]);
 
   useEffect(() => {
     localStorage.setItem('favoritePlaces', JSON.stringify(favorites));
@@ -64,10 +66,21 @@ const WeatherDashboard = () => {
     }
   }, [weather?.timezone]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+    if (searchParam) {
+      const decodedSearch = decodeURIComponent(searchParam);
+      setSearchQuery(decodedSearch);
+      handleSearch(decodedSearch);
+      setSuggestions([]); 
+    }
+  }, [location.search]);
+
   const handleSearch = async (cityName) => {
     setLoading(true);
     setError('');
-    setSuggestions([]);
+    setSuggestions([]); 
     setSearchQuery(cityName);
 
     try {
@@ -173,7 +186,10 @@ const WeatherDashboard = () => {
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                onClick={() => handleSearch(suggestion.name)}
+                onClick={() => {
+                  handleSearch(suggestion.name);
+                  setSuggestions([]); 
+                }}
                 className="px-4 py-2 text-white cursor-pointer hover:bg-gray-700"
               >
                 {suggestion.displayName}
