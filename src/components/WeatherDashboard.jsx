@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiSearch, FiMapPin, FiHeart } from 'react-icons/fi';
+import { FiSearch, FiMapPin, FiHeart, FiClock } from 'react-icons/fi';
 import { getCitySuggestions, getWeatherData, getWeatherByCoords } from '../services/weatherApi';
 
 const WeatherDashboard = () => {
@@ -12,6 +12,7 @@ const WeatherDashboard = () => {
     const saved = localStorage.getItem('favoriteCities');
     return saved ? JSON.parse(saved) : [];
   });
+  const [currentTime, setCurrentTime] = useState('');
   const suggestionsRef = useRef(null);
 
   useEffect(() => {
@@ -42,6 +43,25 @@ const WeatherDashboard = () => {
   useEffect(() => {
     localStorage.setItem('favoriteCities', JSON.stringify(favorites));
   }, [favorites]);
+
+  useEffect(() => {
+    if (weather?.timezone) {
+      const updateTime = () => {
+        const now = new Date();
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const cityTime = new Date(utc + (weather.timezone * 1000));
+        setCurrentTime(cityTime.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        }));
+      };
+
+      updateTime();
+      const interval = setInterval(updateTime, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [weather?.timezone]);
 
   const handleSearch = async (cityName) => {
     setLoading(true);
@@ -174,6 +194,10 @@ const WeatherDashboard = () => {
                       className={favorites.includes(weather.city) ? 'fill-current' : ''}
                     />
                   </button>
+                </div>
+                <div className="flex justify-center items-center gap-2 mb-4 text-gray-400">
+                  <FiClock size={16} />
+                  <span>{currentTime}</span>
                 </div>
                 <p className="mb-4 text-gray-400">Chance of rain: {weather.chanceOfRain}%</p>
                 <div className="flex gap-4 justify-center items-center">

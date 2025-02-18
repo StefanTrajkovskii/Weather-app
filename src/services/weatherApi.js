@@ -161,7 +161,9 @@ export const getWeatherByCoords = async (lat, lon) => {
       realFeel: Math.round(weatherData.main.feels_like),
       chanceOfRain: Math.round(weatherData.clouds.all), // Using cloud coverage as an approximation
       hourlyForecast: processHourlyForecast(forecastData.list),
-      forecast: processDailyForecast(forecastData.list)
+      forecast: processDailyForecast(forecastData.list),
+      timezone: weatherData.timezone, // Add timezone offset in seconds
+      dt: weatherData.dt // Current data timestamp
     };
   } catch (error) {
     throw new Error('Failed to fetch weather data for your location');
