@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FiSearch, FiMapPin } from 'react-icons/fi';
+import { FiSearch, FiMapPin, FiHeart } from 'react-icons/fi';
 import { getCitySuggestions, getWeatherData, getWeatherByCoords } from '../services/weatherApi';
 
 const WeatherDashboard = () => {
@@ -8,6 +8,10 @@ const WeatherDashboard = () => {
   const [weather, setWeather] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('favoriteCities');
+    return saved ? JSON.parse(saved) : [];
+  });
   const suggestionsRef = useRef(null);
 
   useEffect(() => {
@@ -34,6 +38,10 @@ const WeatherDashboard = () => {
     const timeoutId = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
+
+  useEffect(() => {
+    localStorage.setItem('favoriteCities', JSON.stringify(favorites));
+  }, [favorites]);
 
   const handleSearch = async (cityName) => {
     setLoading(true);
@@ -76,6 +84,15 @@ const WeatherDashboard = () => {
     } else {
       setError('Geolocation is not supported by your browser');
     }
+  };
+
+  const toggleFavorite = (city) => {
+    setFavorites(prev => {
+      if (prev.includes(city)) {
+        return prev.filter(c => c !== city);
+      }
+      return [...prev, city];
+    });
   };
 
   const formatTime = (date) => {
@@ -142,7 +159,22 @@ const WeatherDashboard = () => {
             <div className="space-y-6 lg:col-span-2">
               {/* City and Temperature */}
               <div className="text-center">
-                <h1 className="mb-2 text-4xl font-bold text-white">{weather.city}</h1>
+                <div className="flex justify-center items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-bold text-white">{weather.city}</h1>
+                  <button
+                    onClick={() => toggleFavorite(weather.city)}
+                    className={`p-2 rounded-full transition-colors ${
+                      favorites.includes(weather.city)
+                        ? 'text-red-500 hover:text-red-400'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <FiHeart
+                      size={24}
+                      className={favorites.includes(weather.city) ? 'fill-current' : ''}
+                    />
+                  </button>
+                </div>
                 <p className="mb-4 text-gray-400">Chance of rain: {weather.chanceOfRain}%</p>
                 <div className="flex gap-4 justify-center items-center">
                   <span className="text-7xl font-bold text-white">{weather.temp}°</span>
