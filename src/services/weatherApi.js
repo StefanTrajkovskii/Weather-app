@@ -23,6 +23,48 @@ export const getCitySuggestions = async (query) => {
   }
 };
 
+const processHourlyForecast = (list) => {
+  return list.slice(0, 6).map(item => ({
+    time: new Date(item.dt * 1000),
+    temp: Math.round(item.main.temp),
+    icon: item.weather[0].icon
+  }));
+};
+
+const processDailyForecast = (list) => {
+  const dailyForecasts = list.reduce((acc, item) => {
+    const date = new Date(item.dt * 1000);
+    const dateString = date.toDateString();
+    
+    if (!acc[dateString]) {
+      acc[dateString] = {
+        date,
+        temp: {
+          min: item.main.temp_min,
+          max: item.main.temp_max
+        },
+        icon: item.weather[0].icon,
+        description: item.weather[0].description
+      };
+    } else {
+      acc[dateString].temp.min = Math.min(acc[dateString].temp.min, item.main.temp_min);
+      acc[dateString].temp.max = Math.max(acc[dateString].temp.max, item.main.temp_max);
+    }
+    
+    return acc;
+  }, {});
+
+  return Object.values(dailyForecasts)
+    .slice(0, 7)
+    .map(day => ({
+      ...day,
+      temp: {
+        min: Math.round(day.temp.min),
+        max: Math.round(day.temp.max)
+      }
+    }));
+};
+
 export const getWeatherData = async (city) => {
   try {
     // First get coordinates for the city
@@ -52,7 +94,7 @@ export const getWeatherData = async (city) => {
     });
     const weatherData = weatherResponse.data;
 
-    // Get 5-day forecast
+    // Get forecast
     const forecastResponse = await axios.get(`${BASE_URL}/forecast`, {
       params: {
         lat,
@@ -63,41 +105,6 @@ export const getWeatherData = async (city) => {
     });
     const forecastData = forecastResponse.data;
 
-    // Process forecast data to get daily values
-    const dailyForecasts = forecastData.list.reduce((acc, item) => {
-      const date = new Date(item.dt * 1000);
-      const dateString = date.toDateString();
-      
-      if (!acc[dateString]) {
-        acc[dateString] = {
-          date,
-          temp: {
-            min: item.main.temp_min,
-            max: item.main.temp_max
-          },
-          icon: item.weather[0].icon,
-          description: item.weather[0].description
-        };
-      } else {
-        // Update min/max temperatures
-        acc[dateString].temp.min = Math.min(acc[dateString].temp.min, item.main.temp_min);
-        acc[dateString].temp.max = Math.max(acc[dateString].temp.max, item.main.temp_max);
-      }
-      
-      return acc;
-    }, {});
-
-    // Convert to array and take first 7 days
-    const forecast = Object.values(dailyForecasts)
-      .slice(0, 7)
-      .map(day => ({
-        ...day,
-        temp: {
-          min: Math.round(day.temp.min),
-          max: Math.round(day.temp.max)
-        }
-      }));
-
     return {
       city: geoData[0].name,
       temp: Math.round(weatherData.main.temp),
@@ -105,7 +112,11 @@ export const getWeatherData = async (city) => {
       wind: Math.round(weatherData.wind.speed),
       description: weatherData.weather[0].description,
       icon: weatherData.weather[0].icon,
-      forecast
+      uv: 3, // Placeholder as UV index requires a separate API call
+      realFeel: Math.round(weatherData.main.feels_like),
+      chanceOfRain: Math.round(weatherData.clouds.all), // Using cloud coverage as an approximation
+      hourlyForecast: processHourlyForecast(forecastData.list),
+      forecast: processDailyForecast(forecastData.list)
     };
   } catch (error) {
     console.error('API Error:', error.response?.data || error.message);
@@ -126,7 +137,7 @@ export const getWeatherByCoords = async (lat, lon) => {
     });
     const weatherData = weatherResponse.data;
 
-    // Get 5-day forecast
+    // Get forecast
     const forecastResponse = await axios.get(`${BASE_URL}/forecast`, {
       params: {
         lat,
@@ -137,41 +148,6 @@ export const getWeatherByCoords = async (lat, lon) => {
     });
     const forecastData = forecastResponse.data;
 
-    // Process forecast data to get daily values
-    const dailyForecasts = forecastData.list.reduce((acc, item) => {
-      const date = new Date(item.dt * 1000);
-      const dateString = date.toDateString();
-      
-      if (!acc[dateString]) {
-        acc[dateString] = {
-          date,
-          temp: {
-            min: item.main.temp_min,
-            max: item.main.temp_max
-          },
-          icon: item.weather[0].icon,
-          description: item.weather[0].description
-        };
-      } else {
-        // Update min/max temperatures
-        acc[dateString].temp.min = Math.min(acc[dateString].temp.min, item.main.temp_min);
-        acc[dateString].temp.max = Math.max(acc[dateString].temp.max, item.main.temp_max);
-      }
-      
-      return acc;
-    }, {});
-
-    // Convert to array and take first 7 days
-    const forecast = Object.values(dailyForecasts)
-      .slice(0, 7)
-      .map(day => ({
-        ...day,
-        temp: {
-          min: Math.round(day.temp.min),
-          max: Math.round(day.temp.max)
-        }
-      }));
-
     return {
       city: weatherData.name,
       temp: Math.round(weatherData.main.temp),
@@ -179,7 +155,11 @@ export const getWeatherByCoords = async (lat, lon) => {
       wind: Math.round(weatherData.wind.speed),
       description: weatherData.weather[0].description,
       icon: weatherData.weather[0].icon,
-      forecast
+      uv: 3, // Placeholder as UV index requires a separate API call
+      realFeel: Math.round(weatherData.main.feels_like),
+      chanceOfRain: Math.round(weatherData.clouds.all), // Using cloud coverage as an approximation
+      hourlyForecast: processHourlyForecast(forecastData.list),
+      forecast: processDailyForecast(forecastData.list)
     };
   } catch (error) {
     throw new Error('Failed to fetch weather data for your location');
