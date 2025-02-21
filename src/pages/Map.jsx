@@ -4,9 +4,10 @@ import OLMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
-import { fromLonLat } from 'ol/proj';
-import { FiSearch, FiMap, FiThermometer, FiCloud, FiWind } from 'react-icons/fi';
+import { fromLonLat, transform } from 'ol/proj';
+import { FiSearch, FiMap, FiThermometer, FiCloud, FiWind, FiX } from 'react-icons/fi';
 import { getCitySuggestions } from '../services/weatherApi';
+import axios from 'axios';
 
 const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
 
@@ -72,6 +73,53 @@ const Legend = ({ type }) => {
   );
 };
 
+const WeatherPopup = ({ weather, onClose, position }) => {
+  if (!weather) return null;
+
+  return (
+    <div 
+      className="absolute z-50 bg-gray-800 rounded-lg shadow-lg p-4 text-white min-w-[300px]"
+      style={{
+        left: `${position[0]}px`,
+        top: `${position[1]}px`,
+        transform: 'translate(-50%, -120%)'
+      }}
+    >
+      <button 
+        onClick={onClose}
+        className="absolute top-2 right-2 text-gray-400 hover:text-white"
+      >
+        <FiX size={20} />
+      </button>
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold mb-1">{weather.name}</h3>
+        <p className="text-gray-300">{weather.sys.country}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-3xl font-bold mb-2">
+            {Math.round(weather.main.temp)}°C
+          </p>
+          <p className="text-gray-300 capitalize">
+            {weather.weather[0].description}
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm">
+            Feels like: {Math.round(weather.main.feels_like)}°C
+          </p>
+          <p className="text-sm">
+            Humidity: {weather.main.humidity}%
+          </p>
+          <p className="text-sm">
+            Wind: {Math.round(weather.wind.speed * 3.6)} km/h
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function Map() {
   const mapRef = useRef();
   const mapInstanceRef = useRef(null);
@@ -81,6 +129,8 @@ function Map() {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef(null);
+  const [popupWeather, setPopupWeather] = useState(null);
+  const [popupPosition, setPopupPosition] = useState([0, 0]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -113,18 +163,6 @@ function Map() {
     const timeoutId = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
-
-  const handleLocationSelect = (lat, lon) => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.getView().animate({
-        center: fromLonLat([lon, lat]),
-        zoom: 10,
-        duration: 1000
-      });
-      setSearchQuery('');
-      setShowSuggestions(false);
-    }
-  };
 
   useEffect(() => {
     if (!mapInstanceRef.current) {
@@ -199,6 +237,29 @@ function Map() {
       mapInstanceRef.current.on('error', function(event) {
         console.error('Map error:', event);
       });
+
+      // Add click handler
+      mapInstanceRef.current.on('click', async (event) => {
+        const coordinate = transform(
+          event.coordinate,
+          'EPSG:3857',
+          'EPSG:4326'
+        );
+        
+        try {
+          const response = await axios.get(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${coordinate[1]}&lon=${coordinate[0]}&units=metric&appid=${API_KEY}`
+          );
+          
+          setPopupWeather(response.data);
+          setPopupPosition([
+            event.pixel[0],
+            event.pixel[1]
+          ]);
+        } catch (error) {
+          console.error('Error fetching weather data:', error);
+        }
+      });
     }
 
     return () => {
@@ -208,6 +269,22 @@ function Map() {
       }
     };
   }, []);
+
+  const handleLocationSelect = (lat, lon) => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.getView().animate({
+        center: fromLonLat([lon, lat]),
+        zoom: 10,
+        duration: 1000
+      });
+      setSearchQuery('');
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setPopupWeather(null);
+  };
 
   const handleLayerChange = (layerType) => {
     Object.values(weatherLayersRef.current).forEach(layer => {
@@ -285,6 +362,13 @@ function Map() {
       <div className="relative flex-1 w-full">
         <div ref={mapRef} className="w-full h-full" />
         <Legend type={activeLayer} />
+        {popupWeather && (
+          <WeatherPopup
+            weather={popupWeather}
+            onClose={handleClosePopup}
+            position={popupPosition}
+          />
+        )}
       </div>
     </div>
   );
