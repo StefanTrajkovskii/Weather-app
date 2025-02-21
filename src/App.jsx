@@ -10,7 +10,7 @@ function App() {
     <Router>
       <div className="flex min-h-screen bg-gray-900">
         {/* Sidebar */}
-        <nav className="w-20 bg-gray-800 p-4 flex flex-col items-center">
+        <nav className="w-24 bg-gray-800 p-4 flex flex-col items-center">
           <div className="mb-8">
             <WiDaySunny className="text-3xl text-blue-500" />
           </div>
@@ -18,32 +18,35 @@ function App() {
             <NavLink
               to="/"
               className={({ isActive }) =>
-                `p-3 rounded-lg transition-colors ${
+                `p-3 rounded-lg transition-colors flex flex-col items-center ${
                   isActive ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-gray-700'
                 }`
               }
             >
               <WiDaySunny className="text-2xl" />
+              <span className="text-xs mt-1">Weather</span>
             </NavLink>
             <NavLink
               to="/places"
               className={({ isActive }) =>
-                `p-3 rounded-lg transition-colors ${
+                `p-3 rounded-lg transition-colors flex flex-col items-center ${
                   isActive ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-gray-700'
                 }`
               }
             >
               <WiDayCloudyGusts className="text-2xl" />
+              <span className="text-xs mt-1">Places</span>
             </NavLink>
             <NavLink
               to="/map"
               className={({ isActive }) =>
-                `p-3 rounded-lg transition-colors ${
+                `p-3 rounded-lg transition-colors flex flex-col items-center ${
                   isActive ? 'bg-blue-500 text-white' : 'text-gray-400 hover:bg-gray-700'
                 }`
               }
             >
               <WiWindBeaufort7 className="text-2xl" />
+              <span className="text-xs mt-1">Map</span>
             </NavLink>
           </div>
         </nav>

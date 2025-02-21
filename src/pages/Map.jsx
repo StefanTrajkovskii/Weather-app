@@ -3,7 +3,6 @@ import 'ol/ol.css';
 import OLMap from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
 import XYZ from 'ol/source/XYZ';
 import { fromLonLat } from 'ol/proj';
 import { FiSearch } from 'react-icons/fi';
@@ -149,14 +148,14 @@ function Map() {
     <div className="flex flex-col h-screen bg-gray-900">
       <div className="flex flex-col gap-4 p-4 bg-gray-800">
         {/* Search Bar */}
-        <div className="relative w-full max-w-md mx-auto">
-          <div className="relative flex items-center">
+        <div className="relative mx-auto w-full max-w-md">
+          <div className="flex relative items-center">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for a city..."
-              className="w-full px-4 py-2 pl-10 text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 pl-10 w-full text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <FiSearch className="absolute left-3 text-gray-400" size={20} />
           </div>
@@ -165,12 +164,12 @@ function Map() {
           {showSuggestions && suggestions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute z-50 w-full mt-1 bg-gray-700 rounded-lg shadow-lg max-h-60 overflow-auto"
+              className="overflow-auto absolute z-50 mt-1 w-full max-h-60 bg-gray-700 rounded-lg shadow-lg"
             >
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
-                  className="w-full px-4 py-2 text-left text-white hover:bg-gray-600 focus:outline-none"
+                  className="px-4 py-2 w-full text-left text-white hover:bg-gray-600 focus:outline-none"
                   onClick={() => handleLocationSelect(suggestion.lat, suggestion.lon)}
                 >
                   {suggestion.name}
@@ -183,7 +182,7 @@ function Map() {
         </div>
 
         {/* Layer Controls */}
-        <div className="flex justify-center gap-4">
+        <div className="flex gap-4 justify-center">
           <button 
             className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${
               activeLayer === 'default' ? 'bg-blue-700' : 'bg-blue-600 hover:bg-blue-700'
