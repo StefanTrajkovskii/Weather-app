@@ -10,6 +10,68 @@ import { getCitySuggestions } from '../services/weatherApi';
 
 const API_KEY = process.env.REACT_APP_WEATHER_API_KEY;
 
+// Legend configurations for each layer type
+const legendConfig = {
+  temperature: [
+    { color: '#91005B', label: '> 40°C' },
+    { color: '#960B00', label: '35-40°C' },
+    { color: '#C92100', label: '30-35°C' },
+    { color: '#E35D00', label: '25-30°C' },
+    { color: '#E68F00', label: '20-25°C' },
+    { color: '#FFB300', label: '15-20°C' },
+    { color: '#FFD300', label: '10-15°C' },
+    { color: '#C4E109', label: '5-10°C' },
+    { color: '#89E200', label: '0-5°C' },
+    { color: '#47B3FF', label: '-5-0°C' },
+    { color: '#4976FF', label: '-10--5°C' },
+    { color: '#9524FF', label: '-15--10°C' },
+    { color: '#951CFE', label: '-20--15°C' },
+    { color: '#940B99', label: '< -20°C' },
+  ],
+  precipitation: [
+    { color: '#632B88', label: '> 200 mm' },
+    { color: '#4B369E', label: '150-200 mm' },
+    { color: '#2F43A5', label: '100-150 mm' },
+    { color: '#1B53A9', label: '75-100 mm' },
+    { color: '#1167AC', label: '50-75 mm' },
+    { color: '#1B7AAF', label: '25-50 mm' },
+    { color: '#4B8FB1', label: '10-25 mm' },
+    { color: '#7AA6B3', label: '5-10 mm' },
+    { color: '#A3BEB5', label: '2-5 mm' },
+    { color: '#CCD5B7', label: '1-2 mm' },
+    { color: '#EEE9B9', label: '0-1 mm' },
+  ],
+  wind: [
+    { color: '#B91C1C', label: '> 100 km/h' },
+    { color: '#DC2626', label: '75-100 km/h' },
+    { color: '#EF4444', label: '50-75 km/h' },
+    { color: '#F87171', label: '25-50 km/h' },
+    { color: '#FCA5A5', label: '10-25 km/h' },
+    { color: '#FEE2E2', label: '0-10 km/h' },
+  ],
+};
+
+const Legend = ({ type }) => {
+  if (type === 'default') return null;
+
+  return (
+    <div className="absolute bottom-6 right-6 bg-gray-800 p-4 rounded-lg shadow-lg max-w-xs">
+      <h3 className="text-white font-semibold mb-2 capitalize">{type} Legend</h3>
+      <div className="grid gap-1">
+        {legendConfig[type].map((item, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div 
+              className="w-6 h-6 rounded" 
+              style={{ backgroundColor: item.color }}
+            />
+            <span className="text-white text-sm">{item.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 function Map() {
   const mapRef = useRef();
   const mapInstanceRef = useRef(null);
@@ -76,9 +138,24 @@ function Map() {
       });
 
       const createWeatherLayer = (type) => {
+        let layerType;
+        switch(type) {
+          case 'temperature':
+            layerType = 'temp_new';
+            break;
+          case 'precipitation':
+            layerType = 'precipitation_new';
+            break;
+          case 'wind':
+            layerType = 'wind_new';
+            break;
+          default:
+            layerType = type;
+        }
+
         return new TileLayer({
           source: new XYZ({
-            url: `https://tile.openweathermap.org/map/${type}/{z}/{x}/{y}.png?appid=${API_KEY}`,
+            url: `https://tile.openweathermap.org/map/${layerType}/{z}/{x}/{y}.png?appid=${API_KEY}`,
             crossOrigin: 'anonymous',
             attributions: ['Weather data OpenWeatherMap'],
             tileLoadFunction: function(imageTile, src) {
@@ -94,9 +171,9 @@ function Map() {
         });
       };
 
-      const temperatureLayer = createWeatherLayer('temp_new');
-      const precipitationLayer = createWeatherLayer('precipitation_new');
-      const windLayer = createWeatherLayer('wind_new');
+      const temperatureLayer = createWeatherLayer('temperature');
+      const precipitationLayer = createWeatherLayer('precipitation');
+      const windLayer = createWeatherLayer('wind');
 
       weatherLayersRef.current = {
         temperature: temperatureLayer,
@@ -217,10 +294,10 @@ function Map() {
           </button>
         </div>
       </div>
-      <div 
-        ref={mapRef} 
-        className="flex-1 w-full"
-      />
+      <div className="relative flex-1 w-full">
+        <div ref={mapRef} className="w-full h-full" />
+        <Legend type={activeLayer} />
+      </div>
     </div>
   );
 }
