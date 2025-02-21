@@ -211,7 +211,7 @@ const WeatherDashboard = () => {
       />
       <div className="flex relative flex-col items-center p-4 min-h-screen">
         {/* Search Bar */}
-        <div className="w-full max-w-[375px] mb-24">
+        <div className="w-full max-w-[375px] mb-5">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <input
@@ -234,13 +234,13 @@ const WeatherDashboard = () => {
               {suggestions.length > 0 && (
                 <div
                   ref={suggestionsRef}
-                  className="absolute left-0 right-0 z-50 mt-1 bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden"
+                  className="overflow-hidden absolute right-0 left-0 z-50 mt-1 bg-gray-800 rounded-lg border border-gray-700 shadow-lg"
                 >
                   {suggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSearch(suggestion.name)}
-                      className="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
+                      className="px-4 py-2 w-full text-sm text-left text-white hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
                     >
                       {suggestion.name}, {suggestion.state || suggestion.country}
                     </button>
