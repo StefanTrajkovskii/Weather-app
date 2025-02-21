@@ -209,17 +209,11 @@ const WeatherDashboard = () => {
           opacity: isTransitioning ? 1 : 0,
         }}
       />
-      <div className="flex relative flex-col items-center p-8 min-h-screen">
+      <div className="flex relative flex-col items-center p-4 min-h-screen">
         {/* Search Bar */}
-        <div className="relative mb-20 w-full max-w-md">
+        <div className="w-full max-w-[375px] mb-24">
           <div className="flex gap-2">
-            <button
-              onClick={toggleUnit}
-              className="px-4 py-2 text-gray-400 bg-gray-800 rounded-lg border border-gray-700 transition-colors hover:text-white hover:border-gray-600"
-            >
-              °{isCelsius ? 'C' : 'F'}
-            </button>
-            <div className="flex relative flex-1 items-center">
+            <div className="relative flex-1">
               <input
                 type="text"
                 value={searchQuery}
@@ -227,45 +221,46 @@ const WeatherDashboard = () => {
                   setSearchQuery(e.target.value);
                   setIsPlaceSelected(false);
                 }}
-                placeholder="Search for a place..."
-                className="px-4 py-2 w-full text-white bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
+                placeholder="Search place..."
+                className="pr-4 pl-10 w-full h-10 text-sm text-white bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-blue-500"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     handleSearch(searchQuery);
                   }
                 }}
               />
-              <button
-                onClick={() => handleSearch(searchQuery)}
-                className="absolute right-0 px-4 h-full text-gray-400 hover:text-white"
-              >
-                <FiSearch size={20} />
-              </button>
+              <FiSearch className="absolute left-3 top-1/2 text-gray-400 -translate-y-1/2" size={18} />
+              
+              {suggestions.length > 0 && (
+                <div
+                  ref={suggestionsRef}
+                  className="absolute left-0 right-0 z-50 mt-1 bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSearch(suggestion.name)}
+                      className="w-full px-4 py-2 text-left text-sm text-white hover:bg-gray-700 focus:outline-none focus:bg-gray-700"
+                    >
+                      {suggestion.name}, {suggestion.state || suggestion.country}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button
-              onClick={handleLocationSearch}
-              className="px-4 py-2 text-gray-400 bg-gray-800 rounded-lg border border-gray-700 transition-colors hover:text-white hover:border-gray-600"
+              onClick={toggleUnit}
+              className="px-3 h-10 text-gray-400 bg-gray-800 rounded-lg border border-gray-700 transition-colors hover:text-white hover:border-gray-600"
             >
-              <FiMapPin size={20} />
+              °{isCelsius ? 'C' : 'F'}
+            </button>
+            <button
+              onClick={handleLocationSearch}
+              className="px-3 h-10 text-gray-400 bg-gray-800 rounded-lg border border-gray-700 transition-colors hover:text-white hover:border-gray-600"
+            >
+              <FiMapPin size={18} />
             </button>
           </div>
-          
-          {suggestions.length > 0 && (
-            <div
-              ref={suggestionsRef}
-              className="absolute z-10 mt-1 w-full bg-gray-800 rounded-lg border border-gray-700 shadow-lg"
-            >
-              {suggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSearch(suggestion.name)}
-                  className="px-4 py-2 text-white cursor-pointer hover:bg-gray-700"
-                >
-                  {suggestion.displayName}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {error && <div className="text-red-500">{error}</div>}
@@ -315,7 +310,7 @@ const WeatherDashboard = () => {
                   <div className="grid grid-cols-6 gap-4">
                     {weather.hourlyForecast.map((hour, index) => (
                       <div key={index} className="flex flex-col items-center">
-                        <span className="mb-2 text-sm text-gray-400">{formatTime(hour.time)}</span>
+                        <span className="mb-2 text-sm text-gray-300">{formatTime(hour.time)}</span>
                         <img
                           src={`http://openweathermap.org/img/wn/${hour.icon}.png`}
                           alt="weather icon"
@@ -329,9 +324,8 @@ const WeatherDashboard = () => {
 
                 {/* Air Conditions */}
                 <div className="p-6 bg-gray-800 rounded-lg">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="mb-4">
                     <h2 className="text-xl font-semibold text-white">Air Conditions</h2>
-                    <button className="text-sm text-blue-500 hover:text-blue-400">See more</button>
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div className="flex flex-col">
@@ -356,16 +350,16 @@ const WeatherDashboard = () => {
 
               {/* Right Column - 7-Day Forecast */}
               <div className="lg:col-span-1">
-                <div className="p-6 h-full bg-gray-800 rounded-lg">
+                <div className="p-4 h-full bg-gray-800 rounded-lg lg:p-6">
                   <h2 className="mb-4 text-xl font-semibold text-white">7-Day Forecast</h2>
-                  <div className="space-y-7">
+                  <div className="space-y-3 lg:space-y-7">
                     {weather.forecast?.map((day, index) => (
                       <div 
                         key={index} 
-                        className="flex justify-between items-center p-3 bg-gray-700 rounded-lg transition-colors hover:bg-gray-600"
+                        className="flex justify-between items-center p-2 bg-gray-700 rounded-lg transition-colors lg:p-3 hover:bg-gray-600"
                       >
-                        <div className="flex gap-3 items-center">
-                          <div className="w-28">
+                        <div className="flex gap-2 items-center lg:gap-3">
+                          <div className="w-20 lg:w-28">
                             <p className="text-sm font-medium text-gray-300">
                               {index === 0 ? 'Today' : day.date.toLocaleDateString('en-US', { weekday: 'short' })}
                             </p>
@@ -376,11 +370,11 @@ const WeatherDashboard = () => {
                           <img 
                             src={`http://openweathermap.org/img/wn/${day.icon}@2x.png`}
                             alt={day.description}
-                            className="w-12 h-12"
+                            className="w-10 h-10 lg:w-12 lg:h-12"
                           />
                         </div>
                         <div className="flex flex-col items-end">
-                          <p className="mb-1 text-sm text-gray-300 capitalize">{day.description}</p>
+                          <p className="hidden mb-1 text-sm text-gray-300 capitalize lg:block">{day.description}</p>
                           <div className="flex gap-2 justify-center">
                             <span className="text-sm font-medium text-white">{convertTemp(day.temp.max)}°</span>
                             <span className="text-sm text-gray-400">{convertTemp(day.temp.min)}°</span>

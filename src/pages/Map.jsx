@@ -56,7 +56,7 @@ const Legend = ({ type }) => {
   if (type === 'default') return null;
 
   return (
-    <div className="absolute right-6 bottom-6 p-4 max-w-xs bg-gray-800 rounded-lg shadow-lg">
+    <div className="absolute right-6 bottom-6 p-4 max-w-xs bg-gray-800 rounded-lg shadow-lg hidden lg:block">
       <h3 className="mb-2 font-semibold text-white capitalize">{type} Legend</h3>
       <div className="grid gap-1">
         {legendConfig[type].map((item, index) => (
