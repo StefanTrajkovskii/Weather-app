@@ -209,7 +209,7 @@ const WeatherDashboard = () => {
           opacity: isTransitioning ? 1 : 0,
         }}
       />
-      <div className="relative flex flex-col items-center p-8 min-h-screen">
+      <div className="flex relative flex-col items-center p-8 min-h-screen">
         {/* Search Bar */}
         <div className="relative mb-20 w-full max-w-md">
           <div className="flex gap-2">

@@ -16,9 +16,14 @@ export const getCitySuggestions = async (query) => {
     
     return response.data.map(city => ({
       name: city.name,
+      lat: city.lat,
+      lon: city.lon,
+      country: city.country,
+      state: city.state,
       displayName: `${city.name}${city.state ? `, ${city.state}` : ''}, ${city.country}`
     }));
   } catch (error) {
+    console.error('Error fetching city suggestions:', error);
     return [];
   }
 };
@@ -67,7 +72,6 @@ const processDailyForecast = (list) => {
 
 export const getWeatherData = async (city) => {
   try {
-    // First get coordinates for the city
     const geoResponse = await axios.get(`${GEO_URL}/direct`, {
       params: {
         q: city,
@@ -82,46 +86,57 @@ export const getWeatherData = async (city) => {
     }
 
     const { lat, lon } = geoData[0];
-    
-    // Get current weather
     const weatherResponse = await axios.get(`${BASE_URL}/weather`, {
       params: {
         lat,
         lon,
-        units: 'metric',
-        appid: API_KEY
+        appid: API_KEY,
+        units: 'metric'
       }
     });
     const weatherData = weatherResponse.data;
 
-    // Get forecast
     const forecastResponse = await axios.get(`${BASE_URL}/forecast`, {
       params: {
         lat,
         lon,
-        units: 'metric',
-        appid: API_KEY
+        appid: API_KEY,
+        units: 'metric'
       }
     });
     const forecastData = forecastResponse.data;
 
     return {
-      city: geoData[0].name,
+      city: city,
+      lat: lat,
+      lon: lon,
       temp: Math.round(weatherData.main.temp),
       humidity: weatherData.main.humidity,
       wind: Math.round(weatherData.wind.speed),
       description: weatherData.weather[0].description,
       icon: weatherData.weather[0].icon,
-      uv: 3, // Placeholder as UV index requires a separate API call
+      chanceOfRain: Math.round(forecastData.list[0].pop * 100),
       realFeel: Math.round(weatherData.main.feels_like),
-      chanceOfRain: Math.round(weatherData.clouds.all), // Using cloud coverage as an approximation
-      hourlyForecast: processHourlyForecast(forecastData.list),
-      forecast: processDailyForecast(forecastData.list),
-      timezone: weatherData.timezone, // Add timezone offset in seconds
-      dt: weatherData.dt // Current data timestamp
+      uv: Math.round(weatherData.uvi || 0),
+      timezone: weatherData.timezone,
+      hourlyForecast: forecastData.list.slice(0, 6).map(item => ({
+        time: new Date(item.dt * 1000),
+        temp: Math.round(item.main.temp),
+        icon: item.weather[0].icon
+      })),
+      forecast: forecastData.list
+        .filter((item, index) => index % 8 === 0)
+        .map(item => ({
+          date: new Date(item.dt * 1000),
+          temp: {
+            min: Math.round(item.main.temp_min),
+            max: Math.round(item.main.temp_max)
+          },
+          description: item.weather[0].description,
+          icon: item.weather[0].icon
+        }))
     };
   } catch (error) {
-    console.error('API Error:', error.response?.data || error.message);
     throw new Error('Failed to fetch weather data');
   }
 };
