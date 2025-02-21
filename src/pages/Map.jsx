@@ -56,16 +56,16 @@ const Legend = ({ type }) => {
   if (type === 'default') return null;
 
   return (
-    <div className="absolute bottom-6 right-6 bg-gray-800 p-4 rounded-lg shadow-lg max-w-xs">
-      <h3 className="text-white font-semibold mb-2 capitalize">{type} Legend</h3>
+    <div className="absolute right-6 bottom-6 p-4 max-w-xs bg-gray-800 rounded-lg shadow-lg">
+      <h3 className="mb-2 font-semibold text-white capitalize">{type} Legend</h3>
       <div className="grid gap-1">
         {legendConfig[type].map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
+          <div key={index} className="flex gap-2 items-center">
             <div 
               className="w-6 h-6 rounded" 
               style={{ backgroundColor: item.color }}
             />
-            <span className="text-white text-sm">{item.label}</span>
+            <span className="text-sm text-white">{item.label}</span>
           </div>
         ))}
       </div>
@@ -92,12 +92,12 @@ const WeatherPopup = ({ weather, onClose, position }) => {
         <FiX size={20} />
       </button>
       <div className="mb-4">
-        <h3 className="text-xl font-semibold mb-1">{weather.name}</h3>
+        <h3 className="mb-1 text-xl font-semibold">{weather.name}</h3>
         <p className="text-gray-300">{weather.sys.country}</p>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-3xl font-bold mb-2">
+          <p className="mb-2 text-3xl font-bold">
             {Math.round(weather.main.temp)}°C
           </p>
           <p className="text-gray-300 capitalize">
@@ -309,20 +309,20 @@ function Map() {
     <div className="flex flex-col h-screen bg-gray-900">
       <div className="flex flex-col gap-4 p-4 bg-gray-800">
         <div className="relative">
-          <div className="relative flex items-center">
+          <div className="flex relative items-center">
             <FiSearch className="absolute left-3 text-gray-400" size={20} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for a city..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="py-2 pr-4 pl-10 w-full text-white bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           {showSuggestions && suggestions.length > 0 && (
             <div
               ref={suggestionsRef}
-              className="absolute z-10 w-full mt-1 bg-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+              className="overflow-y-auto absolute z-10 mt-1 w-full max-h-60 bg-gray-700 rounded-lg shadow-lg"
             >
               {suggestions.map((suggestion, index) => (
                 <button
